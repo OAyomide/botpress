@@ -17,7 +17,7 @@ const qnaItemData = ({ questions, answer, metadata }) => ({
 
 const prepareMeta = data =>
   _.chain(data)
-    .pick(['enabled', 'action', 'redirectFlow', 'redirectNode'])
+    .pick(['enabled', 'action', 'redirectFlow', 'redirectNode', 'category'])
     .toPairs()
     .map(([name, value]) => ({ name, value: _.isString(value) ? markUpperCase(value) : value }))
     .filter(({ value }) => !_.isUndefined(value) && value !== '')
@@ -141,10 +141,11 @@ export default class Storage {
     return questions.map(qna => ({ id: qna.id, data: qnaItemData(qna) }))
   }
 
-  async answersOn(question) {
+  async answersOn(question, category = null) {
+    const metadataFilters = category ? [{ name: 'category', value: category }] : []
     const { data: { answers } } = await axios.post(
       `/qnamaker/knowledgebases/${this.knowledgebase.id}/generateAnswer`,
-      { question, top: 10, strictFilters: [{ name: 'enabled', value: true }] },
+      { question, top: 10, strictFilters: [{ name: 'enabled', value: true }, ...metadataFilters] },
       { baseURL: this.knowledgebase.hostName, headers: { Authorization: `EndpointKey ${this.endpointKey}` } }
     )
 
